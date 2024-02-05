@@ -2,8 +2,9 @@
 상수 모음
 """
 IMAGE_FORMAT = ('.png', '.jpg', '.jpeg')
-PROGRAM_NAME = "NAIImageCreeper"
-PROGRAM_VERSION = "v0.0.2"
+PROGRAM_NAME = "ImageCreeper"
+PROGRAM_VERSION = "v0.0.3"
+MAX_FILE_NAME_LENGTH = 50
 GUI_STYLE_SHEET = """
             QWidget{
                 background-color: #333;

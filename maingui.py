@@ -60,15 +60,12 @@ class MainGUI(QMainWindow):
         self.optionPanel.show()
 
     def on_clicked_move_files_button(self):
-        if OptionData.is_loaded() == False:
+        if not OptionData.is_loaded():
             CRPopupWindow.show("로드된 이미지가 없습니다.", CRPopupWindow.Warning, self)
             return
-        
-        if DataContainer.search_images_count == 0:
-            CRPopupWindow.show("검색된 이미지가 없습니다.", CRPopupWindow.Info, self)
-            return
 
-        selected_image_infos: list[ImageFileInfo] = self.image_info_list_widget.get_imageinfos()
+        selected_image_infos: set[ImageFileInfo] = self.image_info_list_widget.get_imageinfos()
+        
         final_save_path = FileManager.image_files_to_save_folder(selected_image_infos)
 
         if not OptionData.is_copy_mode:
@@ -81,7 +78,6 @@ class MainGUI(QMainWindow):
             return
 
         self.info_widget.set_info_text("이미지 로드 중... 잠시만 기다려주세요.")
-
         if OptionData.set_load_path(path):
             self.path_widget.set_path_label(path)
             self.thread = QThread()
@@ -100,7 +96,6 @@ class MainGUI(QMainWindow):
             3. 태그는 부분일치 검색됩니다.<br>
             4. ~를 입력하여 완전일치하는 태그를 검색할 수 있습니다.</p>
         ''')
-        print("이미지가 로드되어 패널 업데이트되어야함.")
         self.thread.quit()
         self.thread.wait()
 
@@ -120,7 +115,7 @@ class MainGUI(QMainWindow):
             CRPopupWindow.show("검색어를 입력하세요.", CRPopupWindow.Warning, self)
             return
 
-        image_infos: list[ImageFileInfo] = DataManager.search_images(search_text)
+        image_infos : list[ImageFileInfo] = DataManager.search_images(search_text)
         self._on_search_completed(image_infos)
 
     def _on_search_completed(self, image_infos: list[ImageFileInfo]):
@@ -218,5 +213,5 @@ class ImageLoader(QObject):
     finished = pyqtSignal()
 
     def run(self):
-        DataManager.load_image_infos()
+        DataManager.load_image_infos(OptionData.load_path)
         self.finished.emit()

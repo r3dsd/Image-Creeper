@@ -1,5 +1,4 @@
 import json
-import os
 from r3util import get_program_start_path, get_basic_save_path, check_folder_has_image
 
 class OptionData:

@@ -1,8 +1,9 @@
 import os
+import struct
 import sys
+import timeit
 
 from constants import IMAGE_FORMAT
-from PIL import Image
 
 def boyer_moore(text: str, pattern: str):
     text_length = len(text)
@@ -64,15 +65,41 @@ def check_folder_has_image(target_directory: str):
 def check_is_image(filename: str):
     return filename.lower().endswith(IMAGE_FORMAT)
 
-# PNG 파일의 Description 메타데이터를 가져오는 함수
-def get_png_description(filename: str) -> (str, bool):
-    if check_is_image(filename):
-        with Image.open(filename) as img:
-            description = img.info.get('Description', None)
-            if description:
-                return (description, True)
+# PNG 파일의 Description 메타데이터를 가져오는 함수 (PIL 사용)
+# def get_png_description_pil(filename: str) -> (str, bool):
+#     if check_is_image(filename):
+#         with Image.open(filename) as img:
+#             description = img.info.get('Description', None)
+#             if description:
+#                 return (description, True)
+#             else:
+#                 return (None, False)
+
+# PNG 파일의 Description 메타데이터를 가져오는 함수 (PIL 미사용)
+def get_png_description(filename) -> (str, bool):
+    with open(filename, 'rb') as f:
+        if f.read(8) != b'\x89PNG\r\n\x1a\n':
+            raise ValueError("Not a valid PNG file")
+
+        while True:
+            chunk_length, chunk_type = struct.unpack(">I4s", f.read(8))
+            if chunk_type == b'IEND':
+                break
+
+            # tEXt 청크 처리
+            if chunk_type == b'tEXt':
+                data = f.read(chunk_length)
+                parts = data.split(b'\x00', 1)
+                if len(parts) == 2:
+                    key, value = parts
+                    key = key.decode('latin1')
+                    if key == "Description":
+                        value = value.decode('latin1')
+                        return (value, True)
             else:
-                return (None, False)
+                f.seek(chunk_length, 1)
+            f.read(4)
+    return (None, False)  # Description이 없는 경우
 
 def get_resource_path(relative_path: str):
     """

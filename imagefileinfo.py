@@ -12,3 +12,13 @@ class ImageFileInfo:
 
     def __str__(self):
         return f"{self.file_path}"
+    
+    def __hash__(self) -> int:
+        return hash(self.file_path)
+    
+    def __eq__(self, other) -> bool:
+        if other is None:
+            return False
+        if isinstance(other, self.__class__):
+            return self.file_path == other.file_path
+        return False

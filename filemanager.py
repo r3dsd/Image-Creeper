@@ -4,8 +4,7 @@ from optiondata import OptionData
 from imagefileinfo import ImageFileInfo
 from datacontainer import DataContainer
 from CreeperGUI import CRPopupWindow
-
-MAX_FILE_NAME_LENGTH = 50
+from constants import MAX_FILE_NAME_LENGTH
 
 class FileManager:
     @staticmethod
@@ -24,7 +23,8 @@ class FileManager:
         return save_folder_path
 
 # 검색된 이미지를 저장 경로로 이동하는 함수
-def move_files(target_file_list: list[ImageFileInfo], save_folder_path: str):
+def move_files(target_file_list: set[ImageFileInfo], save_folder_path: str):
+    DataContainer.delete_loaded_image_infos(target_file_list)
     for target_image_info in target_file_list:
         source_file_path: str = target_image_info.file_path
         destination_file_path: str = os.path.join(save_folder_path, target_image_info.file_name)
@@ -33,7 +33,7 @@ def move_files(target_file_list: list[ImageFileInfo], save_folder_path: str):
     CRPopupWindow.show("이미지가 이동되었습니다.", CRPopupWindow.Info)
 
 # 검색된 이미지를 저장 경로에 복사하는 함수
-def copy_files(target_file_list: list[ImageFileInfo], save_folder_path: str,):
+def copy_files(target_file_list: set[ImageFileInfo], save_folder_path: str,):
     for target_image_info in target_file_list:
         source_file_path: str = target_image_info.file_path
         destination_file_path: str = os.path.join(save_folder_path, target_image_info.file_name)

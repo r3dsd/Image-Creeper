@@ -124,16 +124,16 @@ class CRImageInfoListWidget(QWidget):
             self.move_files_button.setDisabled(False)
         else:
             self.move_files_button.setDisabled(True)
-
+        self.imageinfo_list_widget.sortItems(order=Qt.AscendingOrder)
         self.imageinfo_list_widget.scrollToTop()
         self.searched_images_count_label.setText(f'검색된 이미지 수: {len(image_infos)}')
 
-    def get_imageinfos(self):
-        result: list[ImageFileInfo] = []
+    def get_imageinfos(self) -> set[ImageFileInfo]:
+        result: set[ImageFileInfo] = set()
         for index in range(self.imageinfo_list_widget.count()):
             item = self.imageinfo_list_widget.item(index)
             image_info: ImageFileInfo = item.data(Qt.UserRole)
-            result.append(image_info)
+            result.add(image_info)
         return result
 
     def clear(self):

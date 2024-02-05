@@ -1,4 +1,5 @@
 import json
+import os
 from r3util import get_program_start_path, get_basic_save_path, check_folder_has_image
 
 class OptionData:
@@ -60,20 +61,22 @@ class OptionData:
     @classmethod
     def option_data_save_with_json(cls):
         data = {
-            "save_mode": cls.is_copy_mode,
             "save_path": cls.save_path,
+            "save_mode": cls.is_copy_mode,
         }
         with open("option.json", "w") as f:
             json.dump(data, f)
-        print("옵션 데이터 저장 완료! ")
+        print(f"옵션 데이터 저장 완료! 저장 경로: {cls.save_path}, 복사 모드: {cls.is_copy_mode}")
 
     @classmethod
     def option_data_load_with_json(cls):
+        print("옵션 데이터를 로드중...")
         try:
-            with open("option.json", "r") as f:
-                data = json.load(f)
-                cls.is_copy_mode = data["save_mode"]
-                cls.save_path = data["save_path"]
+            with open("option.json", "r") as file:
+                data = json.load(file)
+                cls.save_path = data.get('save_path', cls.save_path)
+                cls.is_copy_mode = data.get('save_mode', cls.is_copy_mode)
+                print(f"옵션 데이터 로드 완료! 저장 경로: {cls.save_path}, 복사 모드: {cls.is_copy_mode}")
         except FileNotFoundError:
             print("옵션 데이터 파일이 없습니다. 새로운 옵션 파일을 생성합니다.")
             cls.init()

@@ -10,10 +10,10 @@ Simple Image Manager for AI Generated Image in NovelAI
 - Save: Relocate or copy search results from List to a different folder with ease.
 
 ### Search Prefix
-None: No prefix means partial search, returning all results containing the keyword.
-~: '~' prefix indicates exact match search, returning only exact keyword matches.
-!: '!' prefix implies partial negation search, returning results containing the keyword but not the word after '!'.
-~!: '~!' prefix signifies exact match negation search, returning exact keyword matches excluding words after '!'.
+- None: No prefix means partial search, returning all results containing the keyword.
+- &#126;: '&#126;' prefix indicates exact match search, returning only exact keyword matches.
+- !: '!' prefix implies partial negation search, returning results containing the keyword but not the word after '!'.
+- &#126;!: '~!' prefix signifies exact match negation search, returning exact keyword matches excluding words after '!'.
 
 ## Usage
 

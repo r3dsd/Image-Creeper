@@ -3,11 +3,16 @@ from imagefileinfo import ImageFileInfo
 class DataContainer:
     loaded_image_infos: set[ImageFileInfo] = []
     search_keywords: list[str] = []
+    search_tag_database: set[str] = set()
     
     @classmethod
     @property
     def loaded_images_count(cls):
         return len(cls.loaded_image_infos)
+    
+    @classmethod
+    def add_database(cls, tag: str):
+        cls.search_tag_database.add(tag)
 
     @classmethod
     def get_image_infos(cls):

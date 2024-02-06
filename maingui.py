@@ -75,6 +75,7 @@ class MainGUI(QMainWindow):
             self.thread.start()
 
     def on_image_load_finished(self) -> None:
+        self.search_bar.update_search_model()
         self.path_widget.update_count_label(DataContainer.loaded_images_count)
         self.info_widget.set_info_text('''
             <p>이미지 로드 완료. 검색어를 입력하세요.<br>

@@ -2,6 +2,7 @@ import cProfile
 import os
 import pstats
 import threading
+import timeit
 from datacontainer import DataContainer
 from imagefileinfo import ImageFileInfo
 
@@ -13,11 +14,11 @@ from r3util import search_with_listfind, boyer_moore, check_is_image, get_png_de
 class DataManager:
     # 이미지 정보를 DataContainer에 로드하는 함수
     # @staticmethod
-    # def load_image_infos(path = OptionData.load_path):
+    # def load_image_infos_single_thread(file_path: str):
     #     DataContainer.clear()
     #     search_images_count: int = 0
     #     tmp_image_infos: list[ImageFileInfo] = []
-    #     for root, _, files in os.walk(path):
+    #     for root, _, files in os.walk(file_path):
     #         for file in files:
     #             if check_is_image(file):
     #                 search_images_count += 1
@@ -54,7 +55,13 @@ class DataManager:
             results = set(executor.map(process_file, files_to_process))
 
         tmp_image_infos = {result for result in results if result is not None}
+        for image_info in tmp_image_infos:
+            for tag in image_info.file_info_list:
+                DataContainer.add_database(tag)
+        print(f'이미지 태그 데이터베이스: {len(DataContainer.search_tag_database)}개')
         DataContainer.set_loaded_image_infos(tmp_image_infos)
+        # 데이터 베이스에 검색 키워드를 추가한다.
+
 
     # 검색 키워드(,로 구분)를 받아 이미지를 검색하는 함수
     @staticmethod
@@ -120,6 +127,10 @@ class DataManager:
                     result.add(image_info)
         print(f'검색 결과: {len(result)}개')
         return result
+    
+    @staticmethod
+    def get_search_database():
+        return DataContainer.search_tag_database
 
 # imgdata = set()
 # imgdata.add(ImageFileInfo("1", "white shirt, blue pants, red shoes, green hat, yellow socks, black gloves"))

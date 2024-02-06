@@ -1,4 +1,5 @@
 # ImageCreeper
+
 Image Management for Local
 Simple Image Manager for AI Generated Image in NovelAI
 
@@ -6,6 +7,7 @@ Simple Image Manager for AI Generated Image in NovelAI
 
 - Path: Scan all files in that Path ( It doesn't matter what folder it contains. )
 - Search: Dive in with prompts, partial matches, and use '~' for exact matches.
+- AutoComplete : Yeah, Now you can see AutoComplete in search bar
 - List : Modify the list of items to choose which files to save.
 - Save: Relocate or copy search results from List to a different folder with ease.
 

@@ -50,8 +50,8 @@ class OptionData:
     def update_save_data(cls, save_path: str, is_copy_mode: bool):
         cls.save_path = save_path
         cls.is_copy_mode = is_copy_mode
-        cls.option_data_save_with_json()
         print(f"옵션 데이터 변경: {cls.save_path}, {cls.is_copy_mode}")
+        cls.option_data_save_with_json()
 
     @classmethod
     def is_loaded(cls):

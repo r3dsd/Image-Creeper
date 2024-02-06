@@ -1,8 +1,8 @@
 import os
 import winsound
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QListWidget, QVBoxLayout, QLabel, QSizePolicy, QFileDialog, QDialog, QCheckBox, QListWidgetItem
-from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtCore import pyqtSignal, Qt, QStringListModel
+from PyQt5.QtWidgets import QMainWindow, QCompleter
 from PyQt5.QtGui import QPixmap
 
 from datacontainer import DataContainer
@@ -40,6 +40,14 @@ class CRSearchBar(QWidget):
 
     def clear(self):
         self.search_bar.clear()
+
+    def update_search_model(self):
+        search_model = QStringListModel()
+        search_model.setStringList(DataContainer.search_tag_database)
+        completer = QCompleter()
+        completer.popup().setStyleSheet("background-color: #333; color: #FFF;")
+        completer.setModel(search_model)
+        self.search_bar.setCompleter(completer)
 
 class CRImageListWidget(QWidget):
     """
@@ -119,6 +127,7 @@ class CRImageListWidget(QWidget):
         self.selected_imageinfo_list_widget.clear()
         self.searched_images_count_label.setText('검색된 이미지 수: 0')
         self.selected_images_count_label.setText('선택된 이미지 수: 0')
+        self._on_selected_list_changed(True)
 
     ##########################################
     #          Private Methods               #
@@ -185,15 +194,17 @@ class CRImageListWidget(QWidget):
         self._update_count_label()
 
     def _update_count_label(self):
-        search_count = self.searched_imageinfo_list_widget.count()
-        selected_count = self.selected_imageinfo_list_widget.count()
-        self.searched_images_count_label.setText(f'검색된 이미지 수: {search_count}')
-        self.selected_images_count_label.setText(f'선택된 이미지 수: {selected_count}')
-
-        if selected_count > 0:
-            self.on_selected_list_changed.emit(False)
+        self.search_count = self.searched_imageinfo_list_widget.count()
+        self.selected_count = self.selected_imageinfo_list_widget.count()
+        self.searched_images_count_label.setText(f'검색된 이미지 수: {self.search_count}')
+        self.selected_images_count_label.setText(f'선택된 이미지 수: {self.selected_count}')
+        if self.selected_count > 0:
+            self._on_selected_list_changed(False)
         else:
-            self.on_selected_list_changed.emit(True)
+            self._on_selected_list_changed(True)
+
+    def _on_selected_list_changed(self, is_empty: bool):
+        self.on_selected_list_changed.emit(is_empty)
 
 class CRImageContainer(QWidget):
     """

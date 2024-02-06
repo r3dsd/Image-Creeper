@@ -145,15 +145,17 @@ class CRImageListWidget(QWidget):
         검색리스트 위젯의 키 이벤트
         """
         if event.key() == Qt.Key_Delete:
-            self.on_user_delete_item.emit()
             self._delete_item(self.searched_imageinfo_list_widget.currentItem())
         elif event.key() == Qt.Key_Z and event.modifiers() & Qt.ControlModifier:
             self._undo_task()
-        elif event.key() == Qt.Key_Right and self.searched_imageinfo_list_widget.currentItem() is not None:
-            self._move_item(self.searched_imageinfo_list_widget, self.selected_imageinfo_list_widget, self.searched_imageinfo_list_widget.currentItem())
-            print("검색리스트 -> 선택리스트")
-        elif event.key() == Qt.Key_Right and event.modifiers():
-            self.selected_imageinfo_list_widget.setFocus()
+        elif event.key() == Qt.Key_Right:
+            if event.modifiers() & Qt.ControlModifier:
+                self.selected_imageinfo_list_widget.setFocus()
+                if self.selected_imageinfo_list_widget.currentItem() is None:
+                    self.selected_imageinfo_list_widget.setCurrentRow(0)
+            elif self.searched_imageinfo_list_widget.currentItem() is not None:
+                self._move_item(self.searched_imageinfo_list_widget, self.selected_imageinfo_list_widget, self.searched_imageinfo_list_widget.currentItem())
+                print("검색리스트 -> 선택리스트")
         else:
             QListWidget.keyPressEvent(self.searched_imageinfo_list_widget, event)
 
@@ -162,15 +164,16 @@ class CRImageListWidget(QWidget):
         선택리스트 위젯의 키 이벤트
         """
         if event.key() == Qt.Key_Delete:
-            self.on_user_delete_item.emit()
             self._delete_item(self.selected_imageinfo_list_widget.currentItem())
         elif event.key() == Qt.Key_Z and event.modifiers() & Qt.ControlModifier:
             self._undo_task()
-        elif event.key() == Qt.Key_Left and self.selected_imageinfo_list_widget.currentItem() is not None:
-            self._move_item(self.selected_imageinfo_list_widget, self.searched_imageinfo_list_widget, self.selected_imageinfo_list_widget.currentItem())
-            print("선택리스트 -> 검색리스트")
-        elif event.key() == Qt.Key_Left and event.modifiers():
-            self.searched_imageinfo_list_widget.setFocus()
+        elif event.key() == Qt.Key_Left:
+            if event.modifiers() & Qt.ControlModifier:
+                self.searched_imageinfo_list_widget.setFocus()
+            elif self.selected_imageinfo_list_widget.currentItem() is not None:
+                self._move_item(self.selected_imageinfo_list_widget, self.searched_imageinfo_list_widget, self.selected_imageinfo_list_widget.currentItem())
+                print("선택리스트 -> 검색리스트")
+
         else:
             QListWidget.keyPressEvent(self.selected_imageinfo_list_widget, event)
 
@@ -184,6 +187,7 @@ class CRImageListWidget(QWidget):
         self._update_count_label()
 
     def _delete_item(self, source_list_widget: QListWidget, delete_item: QListWidgetItem):
+        self.on_user_delete_item.emit()
         delete_index: int = source_list_widget.row(delete_item)
         source_list_widget.takeItem(delete_index)
         CRhistoryManager.add_delete_history(source_list_widget, delete_item)
@@ -292,7 +296,6 @@ class CRPathSelectWidget(QWidget):
 
     def update_move_button_status(self, is_enable: bool):
         self.move_files_button.setDisabled(is_enable)
-        print(f'결과 저장 버튼 상태 변경: {is_enable}')
 
     def choose_path(self):
         selected_path = QFileDialog.getExistingDirectory(self, "Select Directory")

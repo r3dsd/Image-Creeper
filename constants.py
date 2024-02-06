@@ -3,7 +3,7 @@
 """
 IMAGE_FORMAT = ('.png')
 PROGRAM_NAME = "ImageCreeper"
-PROGRAM_VERSION = "v0.0.4"
+PROGRAM_VERSION = "v0.1.0"
 MAX_FILE_NAME_LENGTH = 50
 GUI_STYLE_SHEET = """
             QWidget{

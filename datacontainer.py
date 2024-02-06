@@ -36,7 +36,6 @@ class DataContainer:
         if len(cls.search_keywords) > 0:
             cls.search_keywords.clear()
         cls.search_keywords = keywords
-        print(f"검색 키워드: {cls.search_keywords}")
 
     @classmethod
     def set_loaded_image_infos(cls, image_infos: set[ImageFileInfo]):

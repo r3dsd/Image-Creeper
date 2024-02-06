@@ -3,7 +3,6 @@ import os
 import pstats
 import threading
 from datacontainer import DataContainer
-from optiondata import OptionData
 from imagefileinfo import ImageFileInfo
 
 import concurrent.futures

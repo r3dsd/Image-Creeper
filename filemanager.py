@@ -30,7 +30,7 @@ def move_files(target_file_list: set[ImageFileInfo], save_folder_path: str):
         destination_file_path: str = os.path.join(save_folder_path, target_image_info.file_name)
         shutil.move(source_file_path, destination_file_path)
         print(f'파일 이동: {source_file_path} -> {destination_file_path}')
-    CRPopupWindow.show("이미지가 이동되었습니다.", CRPopupWindow.Info)
+    CRPopupWindow.show_with_folder_open_button("이미지가 이동되었습니다.", save_folder_path)
 
 # 검색된 이미지를 저장 경로에 복사하는 함수
 def copy_files(target_file_list: set[ImageFileInfo], save_folder_path: str,):
@@ -39,7 +39,7 @@ def copy_files(target_file_list: set[ImageFileInfo], save_folder_path: str,):
         destination_file_path: str = os.path.join(save_folder_path, target_image_info.file_name)
         shutil.copy(source_file_path, destination_file_path) # 파일 복사
         print(f'파일 복사: {source_file_path} -> {destination_file_path}')
-    CRPopupWindow.show("이미지가 복사되었습니다.", CRPopupWindow.Info)
+    CRPopupWindow.show_with_folder_open_button("이미지가 복사되었습니다.", save_folder_path)
 
 # 저장 경로를 반환하는 함수
 def get_save_path(is_copy_mode: bool, search_keywords: list[str]):

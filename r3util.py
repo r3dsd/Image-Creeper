@@ -1,7 +1,6 @@
 import os
 import struct
 import sys
-import timeit
 
 from constants import IMAGE_FORMAT
 

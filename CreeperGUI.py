@@ -1,4 +1,4 @@
-from queue import Queue
+import os
 import winsound
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QListWidget, QVBoxLayout, QLabel, QSizePolicy, QFileDialog, QDialog, QCheckBox, QListWidgetItem
 from PyQt5.QtCore import pyqtSignal, Qt
@@ -9,10 +9,12 @@ from datacontainer import DataContainer
 from imagefileinfo import ImageFileInfo
 from optiondata import OptionData
 from r3util import HighlightingText
+from CR_Task import CRhistoryManager
 
 class CRSearchBar(QWidget):
     """
     검색 바 위젯
+    signal: search_requested(str)
     """
     search_requested = pyqtSignal(str)
 
@@ -39,14 +41,13 @@ class CRSearchBar(QWidget):
     def clear(self):
         self.search_bar.clear()
 
-class CRImageInfoListWidget(QWidget):
+class CRImageListWidget(QWidget):
     """
     이미지 정보를 리스트로 표시하는 위젯
     """
     on_selected_image_changed = pyqtSignal(ImageFileInfo)
-    on_clicked_option_button = pyqtSignal()
-    on_clicked_move_files_button = pyqtSignal()
     on_user_delete_item = pyqtSignal()
+    on_selected_list_changed = pyqtSignal(bool)
 
     def __init__(self):
         super().__init__()
@@ -55,112 +56,144 @@ class CRImageInfoListWidget(QWidget):
         self.setLayout(self.layout)
         self.layout.setContentsMargins(10, 0, 5, 0)
 
-        self._undo_history: Queue[tuple[QListWidgetItem, int]]= Queue(maxsize=10)
-
-        # 이미지 리스트 설정
-        self.imageinfo_list_widget = QListWidget()
-        self.imageinfo_list_widget.currentItemChanged.connect(self.emit_current_item_changed)
-        self.imageinfo_list_widget.itemClicked.connect(self.emit_current_item_changed)
-        self.imageinfo_list_widget.alternatingRowColors()
-        self.imageinfo_list_widget.setSelectionMode(QListWidget.SingleSelection)
-        self.imageinfo_list_widget.keyPressEvent = self.keyPressEvent
+        # 좌측 이미지 리스트 설정
+        list_widget_layout = QHBoxLayout()
+        self.searched_imageinfo_list_widget = QListWidget()
+        self.searched_imageinfo_list_widget.currentItemChanged.connect(self._emit_current_item_changed)
+        self.searched_imageinfo_list_widget.itemClicked.connect(self._emit_current_item_changed)
+        self.searched_imageinfo_list_widget.alternatingRowColors()
+        self.searched_imageinfo_list_widget.setSelectionMode(QListWidget.SingleSelection)
+        self.searched_imageinfo_list_widget.keyPressEvent = self._search_keypress_event
         # 리스트 위젯을 레이아웃에 추가합니다.
-        self.layout.addWidget(self.imageinfo_list_widget)
+        list_widget_layout.addWidget(self.searched_imageinfo_list_widget)
 
-        # 리스트 upper 레이아웃 설정
-        list_up_layout = QHBoxLayout()
+        # 우측 이미지 리스트 설정
+        self.selected_imageinfo_list_widget = QListWidget()
+        self.selected_imageinfo_list_widget.currentItemChanged.connect(self._emit_current_item_changed)
+        self.selected_imageinfo_list_widget.itemClicked.connect(self._emit_current_item_changed)
+        self.selected_imageinfo_list_widget.alternatingRowColors()
+        self.selected_imageinfo_list_widget.setSelectionMode(QListWidget.SingleSelection)
+        self.selected_imageinfo_list_widget.keyPressEvent = self._select_keypress_event
+        # 리스트 위젯을 레이아웃에 추가합니다.
+        list_widget_layout.addWidget(self.selected_imageinfo_list_widget)
 
-        self.move_files_button = QPushButton('결과 저장')
-        self.move_files_button.setToolTip('검색된 이미지를 모아 폴더를 생성합니다. (기본 폴더 이름: 검색키워드_..._Copy/Move)')
-        self.move_files_button.clicked.connect(self.emit_move_files_button_clicked)
-        self.move_files_button.setDisabled(True)
-
-        self.option_button = QPushButton('옵션')
-        self.option_button.clicked.connect(self.emit_option_button_clicked)
-
+        label_layout = QHBoxLayout()
         self.searched_images_count_label = QLabel('검색된 이미지 수: 0')
         self.searched_images_count_label.setAlignment(Qt.AlignRight)
         self.searched_images_count_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        list_up_layout.addWidget(self.move_files_button)
-        list_up_layout.addWidget(self.option_button)
-        list_up_layout.addWidget(self.searched_images_count_label)
+        self.selected_images_count_label = QLabel('선택된 이미지 수: 0')
+        self.selected_images_count_label.setAlignment(Qt.AlignRight)
+        self.selected_images_count_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        self.layout.addLayout(list_up_layout)
-        self.layout.addWidget(self.imageinfo_list_widget)
+        label_layout.addWidget(self.searched_images_count_label)
+        label_layout.addWidget(self.selected_images_count_label)
 
-    def emit_current_item_changed(self):
-        if self.imageinfo_list_widget.currentItem() is None:
-            return
-        current_item_info: ImageFileInfo = self.imageinfo_list_widget.currentItem().data(Qt.UserRole)
-        self.on_selected_image_changed.emit(current_item_info)
+        self.layout.addLayout(label_layout)
+        self.layout.addLayout(list_widget_layout)
 
-    def emit_option_button_clicked(self):
-        self.on_clicked_option_button.emit()
-
-    def emit_move_files_button_clicked(self):
-        self.on_clicked_move_files_button.emit()
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Delete:
-            self.on_user_delete_item.emit()
-            self._delete_item(self.imageinfo_list_widget.currentItem())
-            self.searched_images_count_label.setText(f'검색된 이미지 수: {self.imageinfo_list_widget.count()}')
-        elif event.key() == Qt.Key_Z and event.modifiers() & Qt.ControlModifier:
-            self._undo_delete_item()
-            self.searched_images_count_label.setText(f'검색된 이미지 수: {self.imageinfo_list_widget.count()}')
-        else:
-            QListWidget.keyPressEvent(self.imageinfo_list_widget, event)
-
-    def update_list_widget(self, image_infos: list[ImageFileInfo]):
-        self.imageinfo_list_widget.clear()
+    def update_searched_list_widget(self, image_infos: list[ImageFileInfo]) -> None:
+        self.searched_imageinfo_list_widget.clear()
         for image_info in image_infos:
             item = QListWidgetItem()
-            item.setText(f"{image_info.file_path}")
+            item.setText(f"{image_info.file_name}")
             item.setData(Qt.UserRole, image_info)
-            self.imageinfo_list_widget.addItem(item)
-
-        if len(image_infos) > 0:
-            self.move_files_button.setDisabled(False)
-        else:
-            self.move_files_button.setDisabled(True)
-        self.imageinfo_list_widget.sortItems(order=Qt.AscendingOrder)
-        self.imageinfo_list_widget.scrollToTop()
+            self.searched_imageinfo_list_widget.addItem(item)
+        
+        self.searched_imageinfo_list_widget.sortItems(order=Qt.AscendingOrder)
+        self.searched_imageinfo_list_widget.scrollToTop()
         self.searched_images_count_label.setText(f'검색된 이미지 수: {len(image_infos)}')
+        self.searched_imageinfo_list_widget.setFocus()
+        self.searched_imageinfo_list_widget.setCurrentRow(0)
 
     def get_imageinfos(self) -> set[ImageFileInfo]:
         result: set[ImageFileInfo] = set()
-        for index in range(self.imageinfo_list_widget.count()):
-            item = self.imageinfo_list_widget.item(index)
+        for index in range(self.selected_imageinfo_list_widget.count()):
+            item = self.selected_imageinfo_list_widget.item(index)
             image_info: ImageFileInfo = item.data(Qt.UserRole)
             result.add(image_info)
         return result
 
     def clear(self):
-        self.imageinfo_list_widget.clear()
+        self.searched_imageinfo_list_widget.clear()
+        self.selected_imageinfo_list_widget.clear()
         self.searched_images_count_label.setText('검색된 이미지 수: 0')
-        self.move_files_button.setDisabled(True)
+        self.selected_images_count_label.setText('선택된 이미지 수: 0')
 
-    def _delete_item(self, delete_item: QListWidgetItem):
-        delete_index: int = self.imageinfo_list_widget.row(delete_item)
-        self.imageinfo_list_widget.takeItem(delete_index)
-        delete_data: tuple[QListWidgetItem, int] = (delete_item, delete_index)
-        if not self._undo_history.full():
-            self._undo_history.put(delete_data)
-        else:
-            self._undo_history.get()
-            self._undo_history.put(delete_data)
+    ##########################################
+    #          Private Methods               #
+    ##########################################
 
-    def _undo_delete_item(self):
-        if not self._undo_history.empty():
-            undo_data: tuple = self._undo_history.get()
-            item, index = undo_data
-            if item is not None and index is not None:
-                self.imageinfo_list_widget.insertItem(index, item)
-                self.imageinfo_list_widget.scrollToItem(item)
-                self.imageinfo_list_widget.setCurrentItem(item)
+    def _emit_current_item_changed(self):
+        sender_widget: QListWidget = self.sender()
+        if sender_widget.currentItem() is None:
+            return
+        current_item_info = sender_widget.currentItem().data(Qt.UserRole)
+        self.on_selected_image_changed.emit(current_item_info)
+
+    def _search_keypress_event(self, event):
+        """
+        검색리스트 위젯의 키 이벤트
+        """
+        if event.key() == Qt.Key_Delete:
+            self.on_user_delete_item.emit()
+            self._delete_item(self.searched_imageinfo_list_widget.currentItem())
+        elif event.key() == Qt.Key_Z and event.modifiers() & Qt.ControlModifier:
+            self._undo_task()
+        elif event.key() == Qt.Key_Right and self.searched_imageinfo_list_widget.currentItem() is not None:
+            self._move_item(self.searched_imageinfo_list_widget, self.selected_imageinfo_list_widget, self.searched_imageinfo_list_widget.currentItem())
+            print("검색리스트 -> 선택리스트")
+        elif event.key() == Qt.Key_Right and event.modifiers():
+            self.selected_imageinfo_list_widget.setFocus()
         else:
-            print("삭제 이력이 없습니다.")
+            QListWidget.keyPressEvent(self.searched_imageinfo_list_widget, event)
+
+    def _select_keypress_event(self, event):
+        """
+        선택리스트 위젯의 키 이벤트
+        """
+        if event.key() == Qt.Key_Delete:
+            self.on_user_delete_item.emit()
+            self._delete_item(self.selected_imageinfo_list_widget.currentItem())
+        elif event.key() == Qt.Key_Z and event.modifiers() & Qt.ControlModifier:
+            self._undo_task()
+        elif event.key() == Qt.Key_Left and self.selected_imageinfo_list_widget.currentItem() is not None:
+            self._move_item(self.selected_imageinfo_list_widget, self.searched_imageinfo_list_widget, self.selected_imageinfo_list_widget.currentItem())
+            print("선택리스트 -> 검색리스트")
+        elif event.key() == Qt.Key_Left and event.modifiers():
+            self.searched_imageinfo_list_widget.setFocus()
+        else:
+            QListWidget.keyPressEvent(self.selected_imageinfo_list_widget, event)
+
+    def _move_item(self, source_list_widget : QListWidget, destination_list_widget : QListWidget, item : QListWidgetItem):
+        # 아이템 이동 로직
+        target_index = source_list_widget.row(item)
+        target_item = source_list_widget.takeItem(target_index)
+        destination_list_widget.addItem(target_item)
+        # 이동 이력 저장
+        CRhistoryManager.add_move_history(source_list_widget, destination_list_widget, target_item, target_index) 
+        self._update_count_label()
+
+    def _delete_item(self, source_list_widget: QListWidget, delete_item: QListWidgetItem):
+        delete_index: int = source_list_widget.row(delete_item)
+        source_list_widget.takeItem(delete_index)
+        CRhistoryManager.add_delete_history(source_list_widget, delete_item)
+        self._update_count_label()
+
+    def _undo_task(self):
+        CRhistoryManager.undo()
+        self._update_count_label()
+
+    def _update_count_label(self):
+        search_count = self.searched_imageinfo_list_widget.count()
+        selected_count = self.selected_imageinfo_list_widget.count()
+        self.searched_images_count_label.setText(f'검색된 이미지 수: {search_count}')
+        self.selected_images_count_label.setText(f'선택된 이미지 수: {selected_count}')
+
+        if selected_count > 0:
+            self.on_selected_list_changed.emit(False)
+        else:
+            self.on_selected_list_changed.emit(True)
 
 class CRImageContainer(QWidget):
     """
@@ -217,6 +250,8 @@ class CRPathSelectWidget(QWidget):
     경로 선택 위젯
     """
     on_path_selected = pyqtSignal(str)
+    on_clicked_option_button = pyqtSignal()
+    on_clicked_move_files_button = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -224,13 +259,29 @@ class CRPathSelectWidget(QWidget):
         self.setLayout(self.layout)
 
         self.path_label = QLabel('선택된 경로 없음 ( 이미지가 존재하는 폴더를 선택하세요. )')
-        self.count_label = QLabel('로드된 이미지 수: 0')
+        self.layout.addWidget(self.path_label, 7)  # 비율 설정
+
+        button_layout = QHBoxLayout()
         path_button = QPushButton('경로 선택')
         path_button.clicked.connect(self.choose_path)
+        self.option_button = QPushButton('옵션')
+        self.option_button.clicked.connect(self.emit_option_button_clicked)
+        self.move_files_button = QPushButton('결과 저장')
+        self.move_files_button.setToolTip('검색된 이미지를 모아 폴더를 생성합니다. (기본 폴더 이름: 검색키워드_..._Copy/Move)')
+        self.move_files_button.clicked.connect(self.emit_move_files_button_clicked)
+        self.move_files_button.setDisabled(True)
 
-        self.layout.addWidget(self.path_label, 7)  # 비율 설정
-        self.layout.addWidget(path_button, 2)  # 비율 설정
-        self.layout.addWidget(self.count_label, 1)  # 비율 설정
+        button_layout.addWidget(path_button)
+        button_layout.addWidget(self.option_button)
+        button_layout.addWidget(self.move_files_button)
+
+        self.layout.addLayout(button_layout)
+        self.count_label = QLabel('로드된 이미지 수: 0')
+        self.layout.addWidget(self.count_label, 1)
+
+    def update_move_button_status(self, is_enable: bool):
+        self.move_files_button.setDisabled(is_enable)
+        print(f'결과 저장 버튼 상태 변경: {is_enable}')
 
     def choose_path(self):
         selected_path = QFileDialog.getExistingDirectory(self, "Select Directory")
@@ -242,6 +293,12 @@ class CRPathSelectWidget(QWidget):
 
     def update_count_label(self, count: int):
         self.count_label.setText(f'로드된 이미지 수: {count}')
+
+    def emit_option_button_clicked(self):
+        self.on_clicked_option_button.emit()
+
+    def emit_move_files_button_clicked(self):
+        self.on_clicked_move_files_button.emit()
 
 class CROptionDialog(QDialog):
     """
@@ -283,7 +340,6 @@ class CROptionDialog(QDialog):
         option1_layout = QHBoxLayout()
         self.save_path_option_label = QLabel("저장위치 :")
         self.save_path_data_label = QLabel(f"{OptionData.save_path}")
-        self.save_path_data_label.setStyleSheet("background-color: #444; color: #FFF;")
         self.save_path_data_label.setFixedHeight(30)
         self.save_path_select_button = QPushButton("경로 선택")
         self.save_path_select_button.setFixedHeight(30)
@@ -354,11 +410,21 @@ class CRPopupWindow(QDialog):
         self.label = QLabel()
         self.label.setAlignment(Qt.AlignCenter)
 
+        button_layout = QHBoxLayout()
+
         self.ok_button = QPushButton("확인")
         self.ok_button.clicked.connect(self.accept)
 
+        self.open_folder_button = QPushButton("폴더 열기")
+        self.open_folder_button.clicked.connect(self.open_folder)
+        self.open_folder_button.clicked.connect(self.accept)
+        self.target_folder_path = None
+        self.open_folder_button.hide()
+
+        button_layout.addWidget(self.ok_button)
+        button_layout.addWidget(self.open_folder_button)
         self.layout.addWidget(self.label)
-        self.layout.addWidget(self.ok_button)
+        self.layout.addLayout(button_layout)
 
     def accept(self):
         super().accept()
@@ -382,6 +448,17 @@ class CRPopupWindow(QDialog):
         winsound.PlaySound(sound_name, winsound.SND_ASYNC | winsound.SND_ALIAS)
         popup.exec()
 
+    @staticmethod
+    def show_with_folder_open_button(message: str, folder_path: str, parent=None):
+        if parent == None:
+            parent = CRPopupWindow.parent
+        popup = CRPopupWindow(parent)
+        popup.open_folder_button.show()
+        popup.label.setText(message)
+        popup.target_folder_path = folder_path
+        popup.setFixedSize(popup.sizeHint().width(), popup.sizeHint().height())
+        winsound.PlaySound("SystemAsterisk", winsound.SND_ASYNC | winsound.SND_ALIAS)
+        popup.exec()
 
     def set_type(self, popup_type: int):
         type_text = CRPopupWindow._popup_title.get(popup_type, "알림")
@@ -390,3 +467,7 @@ class CRPopupWindow(QDialog):
     @staticmethod
     def set_main_window(main_window):
         CRPopupWindow.parent = main_window
+
+    def open_folder(self):
+        if self.target_folder_path:
+            os.startfile(self.target_folder_path)

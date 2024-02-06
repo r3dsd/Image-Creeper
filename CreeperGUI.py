@@ -155,7 +155,6 @@ class CRImageListWidget(QWidget):
                     self.selected_imageinfo_list_widget.setCurrentRow(0)
             elif self.searched_imageinfo_list_widget.currentItem() is not None:
                 self._move_item(self.searched_imageinfo_list_widget, self.selected_imageinfo_list_widget, self.searched_imageinfo_list_widget.currentItem())
-                print("검색리스트 -> 선택리스트")
         else:
             QListWidget.keyPressEvent(self.searched_imageinfo_list_widget, event)
 
@@ -172,7 +171,6 @@ class CRImageListWidget(QWidget):
                 self.searched_imageinfo_list_widget.setFocus()
             elif self.selected_imageinfo_list_widget.currentItem() is not None:
                 self._move_item(self.selected_imageinfo_list_widget, self.searched_imageinfo_list_widget, self.selected_imageinfo_list_widget.currentItem())
-                print("선택리스트 -> 검색리스트")
 
         else:
             QListWidget.keyPressEvent(self.selected_imageinfo_list_widget, event)

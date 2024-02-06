@@ -18,13 +18,8 @@ class CRhistoryManager():
 
     @classmethod
     def add_history(cls, task: CRTaskData):
-        if len(cls._undo_history) == cls._undo_history.maxlen:
-            cls._undo_history.popleft()
-        
         cls._undo_history.append(task)
         print(f"{task} 추가됨. 현재 이력: {len(cls._undo_history)}개")
-        for i in cls._undo_history:
-            print(i)
 
     @classmethod
     def add_delete_history(cls, source: QListWidget, item: QListWidgetItem):

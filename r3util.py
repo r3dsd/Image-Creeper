@@ -94,10 +94,12 @@ def get_png_description(filename) -> (str, bool):
                     key = key.decode('latin1')
                     if key == "Description":
                         value = value.decode('latin1')
+                        print(f"Description 추출: {filename}")
                         return (value, True)
             else:
                 f.seek(chunk_length, 1)
             f.read(4)
+    print(f"Util : Description이 없는 PNG 파일: {filename}")
     return (None, False)  # Description이 없는 경우
 
 def get_resource_path(relative_path: str):

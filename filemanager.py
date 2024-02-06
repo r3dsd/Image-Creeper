@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import shutil
 from optiondata import OptionData
@@ -24,20 +25,43 @@ class FileManager:
 
 # 검색된 이미지를 저장 경로로 이동하는 함수
 def move_files(target_file_list: set[ImageFileInfo], save_folder_path: str):
-    DataContainer.delete_loaded_image_infos(target_file_list)
     for target_image_info in target_file_list:
         source_file_path: str = target_image_info.file_path
-        destination_file_path: str = os.path.join(save_folder_path, target_image_info.file_name)
+        file_name, file_extension = os.path.splitext(target_image_info.file_name)
+
+        # 파일 이름에 넘버링 추가
+        counter = 1
+        new_file_name = f"{file_name}_{counter}"
+        destination_file_path = os.path.join(save_folder_path, new_file_name + file_extension)
+
+        # 같은 이름이 있는 경우에만 넘버링 증가
+        while os.path.exists(destination_file_path):
+            counter += 1
+            new_file_name = f"{file_name}_{counter}"
+            destination_file_path = os.path.join(save_folder_path, new_file_name + file_extension)
+
         shutil.move(source_file_path, destination_file_path)
         print(f'파일 이동: {source_file_path} -> {destination_file_path}')
     CRPopupWindow.show_with_folder_open_button("이미지가 이동되었습니다.", save_folder_path)
 
 # 검색된 이미지를 저장 경로에 복사하는 함수
-def copy_files(target_file_list: set[ImageFileInfo], save_folder_path: str,):
+def copy_files(target_file_list: set[ImageFileInfo], save_folder_path: str):
     for target_image_info in target_file_list:
         source_file_path: str = target_image_info.file_path
-        destination_file_path: str = os.path.join(save_folder_path, target_image_info.file_name)
-        shutil.copy(source_file_path, destination_file_path) # 파일 복사
+        file_name, file_extension = os.path.splitext(target_image_info.file_name)
+
+        # 파일 이름에 넘버링 추가
+        counter = 1
+        new_file_name = f"{file_name}_{counter}"
+        destination_file_path = os.path.join(save_folder_path, new_file_name + file_extension)
+
+        # 같은 이름이 있는 경우에만 넘버링 증가
+        while os.path.exists(destination_file_path):
+            counter += 1
+            new_file_name = f"{file_name}_{counter}"
+            destination_file_path = os.path.join(save_folder_path, new_file_name + file_extension)
+
+        shutil.copy(source_file_path, destination_file_path)
         print(f'파일 복사: {source_file_path} -> {destination_file_path}')
     CRPopupWindow.show_with_folder_open_button("이미지가 복사되었습니다.", save_folder_path)
 

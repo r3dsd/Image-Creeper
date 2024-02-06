@@ -145,7 +145,7 @@ class CRImageListWidget(QWidget):
         검색리스트 위젯의 키 이벤트
         """
         if event.key() == Qt.Key_Delete:
-            self._delete_item(self.selected_imageinfo_list_widget, self.searched_imageinfo_list_widget.currentItem())
+            self._delete_item(self.searched_imageinfo_list_widget, self.searched_imageinfo_list_widget.currentItem())
         elif event.key() == Qt.Key_Z and event.modifiers() & Qt.ControlModifier:
             self._undo_task()
         elif event.key() == Qt.Key_Right:
@@ -184,11 +184,11 @@ class CRImageListWidget(QWidget):
         CRhistoryManager.add_move_history(source_list_widget, destination_list_widget, target_item, target_index) 
         self._update_count_label()
 
-    def _delete_item(self, source_list_widget: QListWidget, delete_item: QListWidgetItem):
+    def _delete_item(self, source_list_widget: QListWidget, target_item: QListWidgetItem):
         self.on_user_delete_item.emit()
-        delete_index: int = source_list_widget.row(delete_item)
-        source_list_widget.takeItem(delete_index)
-        CRhistoryManager.add_delete_history(source_list_widget, delete_item)
+        delete_index: int = source_list_widget.row(target_item)
+        deleted_item = source_list_widget.takeItem(delete_index)
+        CRhistoryManager.add_delete_history(source_list_widget, deleted_item, delete_index)
         self._update_count_label()
 
     def _undo_task(self):

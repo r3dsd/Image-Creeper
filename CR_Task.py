@@ -22,8 +22,8 @@ class CRhistoryManager():
         print(f"{task} 추가됨. 현재 이력: {len(cls._undo_history)}개")
 
     @classmethod
-    def add_delete_history(cls, source: QListWidget, item: QListWidgetItem):
-        cls.add_history(CRdeleteTask(source, item))
+    def add_delete_history(cls, source: QListWidget, item: QListWidgetItem, item_index: int):
+        cls.add_history(CRdeleteTask(source, item, item_index))
 
     @classmethod
     def add_move_history(cls, source: QListWidget, destination: QListWidget, item: QListWidgetItem, source_index: int):
@@ -67,9 +67,9 @@ class CRdeleteTask(CRTaskData):
     """
     이미지 삭제 작업단위
     """
-    def __init__(self, source: QListWidget, item: QListWidgetItem):
+    def __init__(self, source: QListWidget, item: QListWidgetItem, item_index: int):
         self.source = source
-        self.item_index = source.row(item)
+        self.item_index = item_index
         self.item = item
 
     def rollback(self):

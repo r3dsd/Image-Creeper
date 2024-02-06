@@ -41,6 +41,7 @@ def move_files(target_file_list: set[ImageFileInfo], save_folder_path: str):
 
         shutil.move(source_file_path, destination_file_path)
         print(f'파일 이동: {source_file_path} -> {destination_file_path}')
+    DataContainer.delete_loaded_image_infos(target_file_list)
     CRPopupWindow.show_with_folder_open_button("이미지가 이동되었습니다.", save_folder_path)
 
 # 검색된 이미지를 저장 경로에 복사하는 함수

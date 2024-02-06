@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem
-from queue import LifoQueue
+from collections import deque
 
 class CRTaskData(ABC):
     """
@@ -14,16 +14,17 @@ class CRhistoryManager():
     """
     undo 관리자
     """
-    _undo_history: LifoQueue[CRTaskData] = LifoQueue(maxsize=10)
+    _undo_history: deque[CRTaskData] = deque(maxlen=10)
 
     @classmethod
     def add_history(cls, task: CRTaskData):
-        if not cls._undo_history.full():
-            cls._undo_history.put(task)
-        else:
-            cls._undo_history.get()
-            cls._undo_history.put(task)
-        print(f"{task}")
+        if len(cls._undo_history) == cls._undo_history.maxlen:
+            cls._undo_history.popleft()
+        
+        cls._undo_history.append(task)
+        print(f"{task} 추가됨. 현재 이력: {len(cls._undo_history)}개")
+        for i in cls._undo_history:
+            print(i)
 
     @classmethod
     def add_delete_history(cls, source: QListWidget, item: QListWidgetItem):
@@ -35,8 +36,8 @@ class CRhistoryManager():
 
     @classmethod
     def undo(cls):
-        if not cls._undo_history.empty():
-            undo_data: CRTaskData = cls._undo_history.get()
+        if cls._undo_history:
+            undo_data: CRTaskData = cls._undo_history.pop()
             undo_data.rollback()
         else:
             print("삭제 이력이 없습니다.")

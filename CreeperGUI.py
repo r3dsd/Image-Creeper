@@ -145,7 +145,7 @@ class CRImageListWidget(QWidget):
         검색리스트 위젯의 키 이벤트
         """
         if event.key() == Qt.Key_Delete:
-            self._delete_item(self.searched_imageinfo_list_widget.currentItem())
+            self._delete_item(self.selected_imageinfo_list_widget, self.searched_imageinfo_list_widget.currentItem())
         elif event.key() == Qt.Key_Z and event.modifiers() & Qt.ControlModifier:
             self._undo_task()
         elif event.key() == Qt.Key_Right:
@@ -164,7 +164,7 @@ class CRImageListWidget(QWidget):
         선택리스트 위젯의 키 이벤트
         """
         if event.key() == Qt.Key_Delete:
-            self._delete_item(self.selected_imageinfo_list_widget.currentItem())
+            self._delete_item(self.selected_imageinfo_list_widget, self.selected_imageinfo_list_widget.currentItem())
         elif event.key() == Qt.Key_Z and event.modifiers() & Qt.ControlModifier:
             self._undo_task()
         elif event.key() == Qt.Key_Left:

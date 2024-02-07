@@ -3,8 +3,8 @@ import shutil
 from optiondata import OptionData
 from imagefileinfo import ImageFileInfo
 from datacontainer import DataContainer
-from CreeperGUI import CRPopupWindow
 from constants import MAX_FILE_NAME_LENGTH
+import send2trash
 
 class FileManager:
     @staticmethod
@@ -21,6 +21,14 @@ class FileManager:
             move_files(target_file_list, save_folder_path)
 
         return save_folder_path
+    
+    @staticmethod
+    def delete_files(file_list: set[ImageFileInfo]):
+        for file in file_list:
+            normpath = os.path.normpath(file.file_path)
+            if os.path.exists(normpath):
+                send2trash.send2trash(normpath)
+                print(f'파일 삭제: {file.file_path}')
 
 # 검색된 이미지를 저장 경로로 이동하는 함수
 def move_files(target_file_list: set[ImageFileInfo], save_folder_path: str):
@@ -42,7 +50,6 @@ def move_files(target_file_list: set[ImageFileInfo], save_folder_path: str):
         shutil.move(source_file_path, destination_file_path)
         print(f'파일 이동: {source_file_path} -> {destination_file_path}')
     DataContainer.delete_loaded_image_infos(target_file_list)
-    CRPopupWindow.show_with_folder_open_button("이미지가 이동되었습니다.", save_folder_path)
 
 # 검색된 이미지를 저장 경로에 복사하는 함수
 def copy_files(target_file_list: set[ImageFileInfo], save_folder_path: str):
@@ -63,7 +70,6 @@ def copy_files(target_file_list: set[ImageFileInfo], save_folder_path: str):
 
         shutil.copy(source_file_path, destination_file_path)
         print(f'파일 복사: {source_file_path} -> {destination_file_path}')
-    CRPopupWindow.show_with_folder_open_button("이미지가 복사되었습니다.", save_folder_path)
 
 # 저장 경로를 반환하는 함수
 def get_save_path(is_copy_mode: bool, search_keywords: list[str]):

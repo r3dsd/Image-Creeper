@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QMainWindow, QCompleter
 from PyQt5.QtGui import QPixmap
 
 from datacontainer import DataContainer
+from filemanager import FileManager
 from imagefileinfo import ImageFileInfo
 from optiondata import OptionData
 from r3util import HighlightingText
@@ -56,6 +57,7 @@ class CRImageListWidget(QWidget):
     on_selected_image_changed = pyqtSignal(ImageFileInfo)
     on_user_delete_item = pyqtSignal()
     on_selected_list_changed = pyqtSignal(bool)
+    on_deleted_search_list = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
@@ -86,38 +88,55 @@ class CRImageListWidget(QWidget):
         list_widget_layout.addWidget(self.selected_imageinfo_list_widget)
 
         label_layout = QHBoxLayout()
+        self.delete_searched_button = QPushButton('휴지통으로')
+        self.delete_searched_button.clicked.connect(self._on_delete_searched_button_clicked)
+        self.delete_searched_button.setDisabled(True)
         self.searched_images_count_label = QLabel('검색된 이미지 수: 0')
         self.searched_images_count_label.setAlignment(Qt.AlignRight)
         self.searched_images_count_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-
+        left_layout = QHBoxLayout()
+        left_layout.addWidget(self.delete_searched_button)
+        left_layout.addWidget(self.searched_images_count_label)
         self.selected_images_count_label = QLabel('선택된 이미지 수: 0')
         self.selected_images_count_label.setAlignment(Qt.AlignRight)
         self.selected_images_count_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-
-        label_layout.addWidget(self.searched_images_count_label)
-        label_layout.addWidget(self.selected_images_count_label)
+        right_layout = QHBoxLayout()
+        right_layout.addWidget(self.selected_images_count_label)
+        label_layout.addLayout(left_layout, 5)
+        label_layout.addLayout(right_layout, 5)
 
         self.layout.addLayout(label_layout)
         self.layout.addLayout(list_widget_layout)
 
     def update_searched_list_widget(self, image_infos: list[ImageFileInfo]) -> None:
+        if len(image_infos) == 0:
+            self.delete_searched_button.setDisabled(True)
+            return
         self.searched_imageinfo_list_widget.clear()
         for image_info in image_infos:
             item = QListWidgetItem()
             item.setText(f"{image_info.file_name}")
             item.setData(Qt.UserRole, image_info)
             self.searched_imageinfo_list_widget.addItem(item)
-        
         self.searched_imageinfo_list_widget.sortItems(order=Qt.AscendingOrder)
         self.searched_imageinfo_list_widget.scrollToTop()
         self.searched_images_count_label.setText(f'검색된 이미지 수: {len(image_infos)}')
+        self.delete_searched_button.setDisabled(False)
         self.searched_imageinfo_list_widget.setFocus()
         self.searched_imageinfo_list_widget.setCurrentRow(0)
 
-    def get_imageinfos(self) -> set[ImageFileInfo]:
+    def get_selected_imageinfos(self) -> set[ImageFileInfo]:
         result: set[ImageFileInfo] = set()
         for index in range(self.selected_imageinfo_list_widget.count()):
             item = self.selected_imageinfo_list_widget.item(index)
+            image_info: ImageFileInfo = item.data(Qt.UserRole)
+            result.add(image_info)
+        return result
+    
+    def get_searched_imageinfos(self) -> set[ImageFileInfo]:
+        result: set[ImageFileInfo] = set()
+        for index in range(self.searched_imageinfo_list_widget.count()):
+            item = self.searched_imageinfo_list_widget.item(index)
             image_info: ImageFileInfo = item.data(Qt.UserRole)
             result.add(image_info)
         return result
@@ -128,6 +147,11 @@ class CRImageListWidget(QWidget):
         self.searched_images_count_label.setText('검색된 이미지 수: 0')
         self.selected_images_count_label.setText('선택된 이미지 수: 0')
         self._on_selected_list_changed(True)
+
+    def search_list_clear(self):
+        self.searched_imageinfo_list_widget.clear()
+        self.delete_searched_button.setDisabled(True)
+        self.searched_images_count_label.setText('검색된 이미지 수: 0')
 
     ##########################################
     #          Private Methods               #
@@ -190,6 +214,17 @@ class CRImageListWidget(QWidget):
         deleted_item = source_list_widget.takeItem(delete_index)
         CRhistoryManager.add_delete_history(source_list_widget, deleted_item, delete_index)
         self._update_count_label()
+
+    def _on_delete_searched_button_clicked(self):
+        # 검색된 이미지 리스트의 모든 아이템을 삭제
+        if self.searched_imageinfo_list_widget.count() < 0:
+            return
+        searched_images = self.get_searched_imageinfos()
+        FileManager.delete_files(searched_images)
+        DataContainer.delete_loaded_image_infos(searched_images)
+        self.on_deleted_search_list.emit(f"{len(searched_images)}개의 이미지가 삭제되었습니다.")
+        self.searched_imageinfo_list_widget.clear()
+        self.delete_searched_button.setDisabled(True)
 
     def _undo_task(self):
         CRhistoryManager.undo()
@@ -468,6 +503,7 @@ class CRPopupWindow(QDialog):
         popup.open_folder_button.show()
         popup.label.setText(message)
         popup.target_folder_path = folder_path
+        print(f"{folder_path}에 저장되었습니다.")
         popup.setFixedSize(popup.sizeHint().width(), popup.sizeHint().height())
         winsound.PlaySound("SystemAsterisk", winsound.SND_ASYNC | winsound.SND_ALIAS)
         popup.exec()

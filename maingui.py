@@ -51,7 +51,7 @@ class MainGUI(QMainWindow):
             CRPopupWindow.show("로드된 이미지가 없습니다.", CRPopupWindow.Warning, self)
             return
 
-        selected_image_infos: set[ImageFileInfo] = self.image_info_list_widget.get_imageinfos()
+        selected_image_infos: set[ImageFileInfo] = self.image_info_list_widget.get_selected_imageinfos()
         
         FileManager.image_files_to_save_folder(selected_image_infos)
         self.path_widget.update_count_label(DataContainer.loaded_images_count)
@@ -59,13 +59,17 @@ class MainGUI(QMainWindow):
             self.image_view_container.clear()
             self.image_info_list_widget.clear()
             self.info_widget.clear()
+            CRPopupWindow.show_with_folder_open_button("이미지 이동 완료!", OptionData.save_path)
+            return
+        CRPopupWindow.show_with_folder_open_button("이미지 복사 완료!", OptionData.save_path)
 
     def on_path_selected(self, path: str) -> None:
         if path == '':
+            CRPopupWindow.show("해당 경로에서 이미지를 찾지 못했습니다.", CRPopupWindow.Warning, self)
             return
         self.image_info_list_widget.clear()
-        self.info_widget.set_info_text("이미지 로드 중... 잠시만 기다려주세요.")
         if OptionData.set_load_path(path):
+            self.info_widget.set_info_text("이미지 로드 중... 잠시만 기다려주세요.")
             self.path_widget.set_path_label(path)
             self.thread = QThread()
             self.image_loader = ImageLoader()
@@ -73,6 +77,8 @@ class MainGUI(QMainWindow):
             self.thread.started.connect(self.image_loader.run)
             self.image_loader.finished.connect(self.on_image_load_finished)
             self.thread.start()
+        else:
+            CRPopupWindow.show("해당 경로에서 이미지를 찾지 못했습니다.", CRPopupWindow.Warning, self)
 
     def on_image_load_finished(self) -> None:
         self.search_bar.update_search_model()
@@ -100,6 +106,12 @@ class MainGUI(QMainWindow):
         :param is_empty: 선택된 이미지 리스트가 비어있는지 여부"""
         self.path_widget.update_move_button_status(is_empty)
 
+    def on_deleted_search_list(self, text: str) -> None:
+        self.image_view_container.clear()
+        self.info_widget.set_info_text(text)
+        self.path_widget.update_count_label(DataContainer.loaded_images_count)
+
+
     ########################################
     #          Private Methods             #
     ########################################
@@ -126,7 +138,7 @@ class MainGUI(QMainWindow):
         """
         if len(image_infos) == 0:
             self.info_widget.set_info_text("검색 결과가 없습니다.")
-            self.image_info_list_widget.clear()
+            self.image_info_list_widget.search_list_clear()
             self.image_view_container.clear()
             return
         self.image_info_list_widget.update_searched_list_widget(image_infos)
@@ -216,6 +228,7 @@ class MainGUI(QMainWindow):
         self.image_info_list_widget.on_selected_image_changed.connect(self.on_selected_image_changed)
         self.image_info_list_widget.on_user_delete_item.connect(self.on_user_delete_item)
         self.image_info_list_widget.on_selected_list_changed.connect(self.on_selected_list_changed)
+        self.image_info_list_widget.on_deleted_search_list.connect(self.on_deleted_search_list)
 
         # 이미지 미리보기 위젯
         self.image_view_container: CRImageContainer = CRImageContainer()

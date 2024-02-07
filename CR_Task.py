@@ -39,7 +39,7 @@ class CRhistoryManager():
 
     @classmethod
     def clear(cls):
-        cls._undo_history.queue.clear()
+        cls._undo_history.clear()
 
 class CRmoveTask(CRTaskData):
     """

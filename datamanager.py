@@ -60,8 +60,6 @@ class DataManager:
                 DataContainer.add_database(tag)
         print(f'이미지 태그 데이터베이스: {len(DataContainer.search_tag_database)}개')
         DataContainer.set_loaded_image_infos(tmp_image_infos)
-        # 데이터 베이스에 검색 키워드를 추가한다.
-
 
     # 검색 키워드(,로 구분)를 받아 이미지를 검색하는 함수
     @staticmethod

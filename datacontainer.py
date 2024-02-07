@@ -30,7 +30,7 @@ class DataContainer:
     def delete_loaded_image_infos(cls, image_infos: set[ImageFileInfo]):
         before_count = cls.loaded_images_count
         cls.loaded_image_infos.difference_update(image_infos)
-        print(f"파일이 이동되었습니다. {before_count}개 -> {cls.loaded_images_count}개")
+        print(f"파일개수가 변동 되었습니다. {before_count}개 -> {cls.loaded_images_count}개")
 
     @classmethod
     def add_search_keywords(cls, keywords: list[str]):

@@ -1,6 +1,6 @@
 import sys
-from maingui import MainGUI
-from CreeperGUI import CRPopupWindow
+from script.maingui import MainGUI
+from script.CRGUI import CRPopupWindow
 
 from PyQt5.QtWidgets import QApplication
 

@@ -1,9 +1,9 @@
 import os
 import shutil
-from optiondata import OptionData
-from imagefileinfo import ImageFileInfo
-from datacontainer import DataContainer
-from constants import MAX_FILE_NAME_LENGTH
+from .optiondata import OptionData
+from .imagefileinfo import ImageFileInfo
+from .datacontainer import DataContainer
+from .constants import MAX_FILE_NAME_LENGTH
 import send2trash
 
 class FileManager:

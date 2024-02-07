@@ -3,16 +3,16 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtCore import pyqtSignal, QObject, QThread
 
-from CreeperGUI import CRPathSelectWidget, CRSearchBar, CRImageListWidget, CRImageContainer, CRInfoWidget, CRPopupWindow, CROptionDialog
-from filemanager import FileManager
-from datamanager import DataManager
+from .CRGUI import CRPathSelectWidget, CRSearchBar, CRImageListWidget, CRImageContainer, CRInfoWidget, CRPopupWindow, CROptionDialog
+from .filemanager import FileManager
+from .datamanager import DataManager
 
-from datacontainer import DataContainer
-from optiondata import OptionData
-from imagefileinfo import ImageFileInfo
+from .datacontainer import DataContainer
+from .optiondata import OptionData
+from .imagefileinfo import ImageFileInfo
 
-from constants import PROGRAM_NAME, PROGRAM_VERSION, GUI_STYLE_SHEET
-from r3util import get_resource_path
+from .constants import PROGRAM_NAME, PROGRAM_VERSION, GUI_STYLE_SHEET
+from .r3util import get_resource_path
 
 class MainGUI(QMainWindow):
     def __init__(self):

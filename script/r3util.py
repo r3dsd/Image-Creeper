@@ -2,7 +2,7 @@ import os
 import struct
 import sys
 
-from constants import IMAGE_FORMAT
+from .constants import IMAGE_FORMAT
 
 def boyer_moore(text: str, pattern: str):
     text_length = len(text)

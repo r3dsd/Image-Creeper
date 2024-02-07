@@ -5,12 +5,12 @@ from PyQt5.QtCore import pyqtSignal, Qt, QStringListModel
 from PyQt5.QtWidgets import QMainWindow, QCompleter
 from PyQt5.QtGui import QPixmap
 
-from datacontainer import DataContainer
-from filemanager import FileManager
-from imagefileinfo import ImageFileInfo
-from optiondata import OptionData
-from r3util import HighlightingText
-from CR_Task import CRhistoryManager
+from .datacontainer import DataContainer
+from .filemanager import FileManager
+from .imagefileinfo import ImageFileInfo
+from .optiondata import OptionData
+from .r3util import HighlightingText
+from .CRhistorymanager import CRhistoryManager
 
 class CRSearchBar(QWidget):
     """

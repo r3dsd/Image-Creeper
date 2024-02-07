@@ -1,4 +1,4 @@
-from imagefileinfo import ImageFileInfo
+from .imagefileinfo import ImageFileInfo
 
 class DataContainer:
     loaded_image_infos: set[ImageFileInfo] = []

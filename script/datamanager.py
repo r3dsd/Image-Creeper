@@ -1,14 +1,10 @@
-import cProfile
 import os
-import pstats
-import threading
-import timeit
-from datacontainer import DataContainer
-from imagefileinfo import ImageFileInfo
+from .datacontainer import DataContainer
+from .imagefileinfo import ImageFileInfo
 
 import concurrent.futures
 
-from r3util import search_with_listfind, boyer_moore, check_is_image, get_png_description
+from .r3util import search_with_listfind, boyer_moore, check_is_image, get_png_description
 
 
 class DataManager:

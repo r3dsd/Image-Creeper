@@ -79,7 +79,7 @@ def get_png_description(filename) -> (str, bool):
         with Image.open(filename) as img:
             tmp = read_info_from_image_stealth(img)
             if tmp:
-                print(f"Util : Stealth 모드로 Description 추출:{filename}")
+                print(f"Util : Stealth 모드로 Description 추출: {filename}")
                 desc = json.loads(tmp)['Description']
                 return (desc, True)
     print(f"Util : Description이 없는 PNG 파일: {filename}")

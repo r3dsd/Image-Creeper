@@ -75,14 +75,14 @@ def get_png_description(filename) -> (str, bool):
             else:
                 f.seek(chunk_length, 1)
             f.read(4)
-    print(f"Util : Description이 없는 PNG 파일: {filename}")
     if OptionData.is_stealth_mode:
         with Image.open(filename) as img:
             tmp = read_info_from_image_stealth(img)
             if tmp:
-                print(f"Util : Stealth 모드로 Description 추출 완료.")
+                print(f"Util : Stealth 모드로 Description 추출:{filename}")
                 desc = json.loads(tmp)['Description']
                 return (desc, True)
+    print(f"Util : Description이 없는 PNG 파일: {filename}")
     return (None, False)  # Description이 없는 경우
 
 def HighlightingText(text: str, keywords: list[str]):

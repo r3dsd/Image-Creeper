@@ -72,7 +72,7 @@ class OptionData:
         }
         with open("option.json", "w") as f:
             json.dump(data, f)
-        print(f"옵션 데이터 저장 완료! 저장 경로: {cls.save_path}, 복사 모드: {cls.is_copy_mode}")
+        print(f"옵션 데이터 저장 완료! 저장 경로: {cls.save_path}, 복사 모드: {cls.is_copy_mode} 스텔스 모드: {cls.is_stealth_mode}")
 
     @classmethod
     def option_data_load_with_json(cls):

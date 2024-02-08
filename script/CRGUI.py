@@ -1,9 +1,9 @@
 import os
 import winsound
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QListWidget, QVBoxLayout, QLabel, QSizePolicy, QFileDialog, QDialog, QCheckBox, QListWidgetItem
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QListWidget, QVBoxLayout, QLabel, QSizePolicy, QFileDialog, QDialog, QCheckBox, QListWidgetItem, QMenu
 from PyQt5.QtCore import pyqtSignal, Qt, QStringListModel
 from PyQt5.QtWidgets import QMainWindow, QCompleter
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QContextMenuEvent, QPixmap
 
 from .datacontainer import DataContainer
 from .filemanager import FileManager
@@ -68,20 +68,19 @@ class CRImageListWidget(QWidget):
 
         # 좌측 이미지 리스트 설정
         list_widget_layout = QHBoxLayout()
-        self.searched_imageinfo_list_widget = QListWidget()
+        self.searched_imageinfo_list_widget = CRListWidget()
         self.searched_imageinfo_list_widget.currentItemChanged.connect(self._emit_current_item_changed)
         self.searched_imageinfo_list_widget.itemClicked.connect(self._emit_current_item_changed)
-        self.searched_imageinfo_list_widget.alternatingRowColors()
         self.searched_imageinfo_list_widget.setSelectionMode(QListWidget.SingleSelection)
         self.searched_imageinfo_list_widget.keyPressEvent = self._search_keypress_event
+        self.searched_imageinfo_list_widget.setContextMenuPolicy(Qt.DefaultContextMenu)
         # 리스트 위젯을 레이아웃에 추가합니다.
         list_widget_layout.addWidget(self.searched_imageinfo_list_widget)
 
         # 우측 이미지 리스트 설정
-        self.selected_imageinfo_list_widget = QListWidget()
+        self.selected_imageinfo_list_widget = CRListWidget()
         self.selected_imageinfo_list_widget.currentItemChanged.connect(self._emit_current_item_changed)
         self.selected_imageinfo_list_widget.itemClicked.connect(self._emit_current_item_changed)
-        self.selected_imageinfo_list_widget.alternatingRowColors()
         self.selected_imageinfo_list_widget.setSelectionMode(QListWidget.SingleSelection)
         self.selected_imageinfo_list_widget.keyPressEvent = self._select_keypress_event
         # 리스트 위젯을 레이아웃에 추가합니다.
@@ -346,6 +345,33 @@ class CRPathSelectWidget(QWidget):
 
     def emit_move_files_button_clicked(self):
         self.on_clicked_move_files_button.emit()
+
+class CRListWidget(QListWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def contextMenuEvent(self, event):
+        contextMenu = QMenu(self)
+        action1 = contextMenu.addAction("폴더 열기")
+        action2 = contextMenu.addAction("파일 열기")
+        action = contextMenu.exec_(self.mapToGlobal(event.pos()))
+        
+        if action == action1:
+            self.folder_open()
+        elif action == action2:
+            self.file_view()
+
+    def file_view(self):
+        item = self.currentItem()
+        if item:
+            image_info: ImageFileInfo = item.data(Qt.UserRole)
+            os.startfile(image_info.file_path)
+
+    def folder_open(self):
+        item = self.currentItem()
+        if item:
+            image_info: ImageFileInfo = item.data(Qt.UserRole)
+            os.startfile(os.path.dirname(image_info.file_path))
 
 class CROptionDialog(QDialog):
     """

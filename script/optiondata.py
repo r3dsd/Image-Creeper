@@ -82,7 +82,8 @@ class OptionData:
                 data = json.load(file)
                 cls.save_path = data.get('save_path', cls.save_path)
                 cls.is_copy_mode = data.get('save_mode', cls.is_copy_mode)
-                print(f"옵션 데이터 로드 완료! 저장 경로: {cls.save_path}, 복사 모드: {cls.is_copy_mode}")
+                cls.is_stealth_mode = data.get('stealth_mode', cls.is_stealth_mode)
+                print(f"옵션 데이터 로드 완료! 저장 경로: {cls.save_path}, 복사 모드: {cls.is_copy_mode} 스텔스 모드: {cls.is_stealth_mode}")
         except FileNotFoundError:
             print("옵션 데이터 파일이 없습니다. 새로운 옵션 파일을 생성합니다.")
             cls.init()

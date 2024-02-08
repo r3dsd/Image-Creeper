@@ -1,11 +1,12 @@
 import json
-from .r3util import get_program_start_path, get_basic_save_path, check_folder_has_image
+from .pathinit import get_basic_save_path, get_program_start_path, check_folder_has_image
 
 class OptionData:
     program_start_path: str = get_program_start_path()
     load_path: str = None
     save_path: str = get_basic_save_path(program_start_path)
     is_copy_mode: bool = True
+    is_stealth_mode: bool = False
 
     @classmethod
     def init(cls):
@@ -47,6 +48,11 @@ class OptionData:
         print(f"복사 모드 변경: {cls.is_copy_mode}")
 
     @classmethod
+    def set_stealth_mode(cls, is_stealth_mode: bool):
+        cls.is_stealth_mode = is_stealth_mode
+        print(f"스텔스 모드 변경: {cls.is_stealth_mode} !주의! 이미지 로드 시간이 매우 길어질 수 있습니다.")
+
+    @classmethod
     def update_save_data(cls, save_path: str, is_copy_mode: bool):
         cls.save_path = save_path
         cls.is_copy_mode = is_copy_mode
@@ -62,6 +68,7 @@ class OptionData:
         data = {
             "save_path": cls.save_path,
             "save_mode": cls.is_copy_mode,
+            "stealth_mode": cls.is_stealth_mode
         }
         with open("option.json", "w") as f:
             json.dump(data, f)

@@ -12,7 +12,7 @@ from .optiondata import OptionData
 from .imagefileinfo import ImageFileInfo
 
 from .constants import PROGRAM_NAME, PROGRAM_VERSION, GUI_STYLE_SHEET
-from .r3util import get_resource_path
+from .pathinit import get_resource_path
 
 class MainGUI(QMainWindow):
     def __init__(self):
@@ -274,5 +274,5 @@ class ImageLoader(QObject):
     finished = pyqtSignal()
 
     def run(self):
-        DataManager.load_image_infos(OptionData.load_path)
+        DataManager.load_image_infos_with_multi(OptionData.load_path)
         self.finished.emit()

@@ -1,8 +1,9 @@
-import os
+import json
 import struct
-import sys
+from PIL import Image
 
-from .constants import IMAGE_FORMAT
+from .optiondata import OptionData
+from .stealth_pnginfo import read_info_from_image_stealth
 
 def boyer_moore(text: str, pattern: str):
     text_length = len(text)
@@ -33,36 +34,6 @@ def search_with_listfind(text_list: list[str], pattern: str):
         if text == pattern:
             return True
     return False
-
-def get_program_start_path():
-    """
-    프로그램 시작 경로를 반환하는 함수
-    """
-    if getattr(sys, 'frozen', False):
-        # pyinstaller로 빌드된 실행 파일의 경우
-        main_path = os.path.dirname(sys.executable)
-    else:
-        # 일반적인 파이썬 스크립트 실행의 경우
-        main_path = os.path.dirname(os.path.abspath(__file__))
-    print(f"Util : 프로그램 시작 경로: {main_path}")
-    return main_path
-
-def get_basic_save_path(program_start_path: str):
-    """
-    기본 저장 경로를 반환하는 함수
-    """
-    return os.path.join(program_start_path, "CreeperResult")
-
-# directory에 이미지가 있는지 확인하는 함수
-def check_folder_has_image(target_directory: str):
-    for _, _, files in os.walk(target_directory):
-        for file in files:
-            if check_is_image(file):
-                return True
-    return False
-
-def check_is_image(filename: str):
-    return filename.lower().endswith(IMAGE_FORMAT)
 
 # PNG 파일의 Description 메타데이터를 가져오는 함수 (PIL 사용)
 # def get_png_description_pil(filename: str) -> (str, bool):
@@ -96,24 +67,23 @@ def get_png_description(filename) -> (str, bool):
                         value = value.decode('latin1')
                         print(f"Description 추출: {filename}")
                         return (value, True)
+                    elif key == "Comment":
+                        value = value.decode('latin1')
+                        prompt_data = json.loads(value)['prompt']
+                        print(f"Description 추출: {filename}")
+                        return (prompt_data, True)
             else:
                 f.seek(chunk_length, 1)
             f.read(4)
     print(f"Util : Description이 없는 PNG 파일: {filename}")
+    if OptionData.is_stealth_mode:
+        with Image.open(filename) as img:
+            tmp = read_info_from_image_stealth(img)
+            if tmp:
+                print(f"Util : Stealth 모드로 Description 추출 완료.")
+                desc = json.loads(tmp)['Description']
+                return (desc, True)
     return (None, False)  # Description이 없는 경우
-
-def get_resource_path(relative_path: str):
-    """
-    올바른 리소스 경로를 반환하는 함수
-    """
-    if getattr(sys, 'frozen', False):
-        # pyinstaller로 빌드된 실행 파일의 경우
-        base_path = sys._MEIPASS
-    else:
-        # 일반적인 파이썬 스크립트 실행의 경우
-        base_path = os.path.abspath(".")
-    print(f"Util : 리소스 경로: {os.path.join(base_path, relative_path)}")
-    return os.path.join(base_path, relative_path)
 
 def HighlightingText(text: str, keywords: list[str]):
     # 텍스트를 쉼표와 공백을 기준으로 단어 단위로 분리

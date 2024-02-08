@@ -1,10 +1,11 @@
 import os
 from .datacontainer import DataContainer
 from .imagefileinfo import ImageFileInfo
+from .dll import PngDescriptionDLL
 
 import concurrent.futures
-
-from .r3util import search_with_listfind, boyer_moore, check_is_image, get_png_description
+from .r3util import search_with_listfind, boyer_moore, get_png_description
+from .pathinit import check_is_image
 
 
 class DataManager:
@@ -29,7 +30,24 @@ class DataManager:
     #     DataContainer.set_loaded_image_infos(tmp_image_infos)
 
     @staticmethod
-    def load_image_infos(path: str):
+    def load_image_infos_with_dll(path: str):
+        normpath = os.path.normpath(path)
+        DataContainer.clear()
+
+        dll = PngDescriptionDLL.PngDescriptionManager()
+        infos: list[tuple[str, str]] = dll.Load(normpath)
+
+        if infos is not None:
+            tmp_image_infos = {ImageFileInfo(path, desc) for path, desc in infos}
+            for image_info in tmp_image_infos:
+                for tag in image_info.file_info_list:
+                    DataContainer.add_database(tag)
+            print(f'이미지 태그 데이터베이스: {len(DataContainer.search_tag_database)}개')
+            DataContainer.set_loaded_image_infos(tmp_image_infos)
+
+
+    @staticmethod
+    def load_image_infos_with_multi(path: str):
         DataContainer.clear()
 
         def process_file(file_path):
@@ -51,6 +69,28 @@ class DataManager:
             results = set(executor.map(process_file, files_to_process))
 
         tmp_image_infos = {result for result in results if result is not None}
+        for image_info in tmp_image_infos:
+            for tag in image_info.file_info_list:
+                DataContainer.add_database(tag)
+        print(f'이미지 태그 데이터베이스: {len(DataContainer.search_tag_database)}개')
+        DataContainer.set_loaded_image_infos(tmp_image_infos)
+
+    def load_image_infos_with_single(path: str):
+        DataContainer.clear()
+        search_images_count: int = 0
+        tmp_image_infos: list[ImageFileInfo] = []
+        for root, _, files in os.walk(path):
+            for file in files:
+                if check_is_image(file):
+                    search_images_count += 1
+                    file_path = os.path.join(root, file)
+                    description, is_acessable = get_png_description(file_path)
+                    if not is_acessable:
+                        continue
+                    image_info = ImageFileInfo(file_path, description)
+                    tmp_image_infos.append(image_info)
+                    print(f'현재 로드한 이미지 : {search_images_count}개 / {file_path}')
+
         for image_info in tmp_image_infos:
             for tag in image_info.file_info_list:
                 DataContainer.add_database(tag)

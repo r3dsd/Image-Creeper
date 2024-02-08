@@ -3,7 +3,7 @@ import winsound
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLineEdit, QPushButton, QListWidget, QVBoxLayout, QLabel, QSizePolicy, QFileDialog, QDialog, QCheckBox, QListWidgetItem, QMenu
 from PyQt5.QtCore import pyqtSignal, Qt, QStringListModel
 from PyQt5.QtWidgets import QMainWindow, QCompleter
-from PyQt5.QtGui import QContextMenuEvent, QPixmap
+from PyQt5.QtGui import QPixmap
 
 from .datacontainer import DataContainer
 from .filemanager import FileManager
@@ -88,6 +88,7 @@ class CRImageListWidget(QWidget):
 
         label_layout = QHBoxLayout()
         self.delete_searched_button = QPushButton('휴지통으로')
+        self.delete_searched_button.setToolTip('검색된 이미지를 삭제합니다. (휴지통으로 이동)')
         self.delete_searched_button.clicked.connect(self._on_delete_searched_button_clicked)
         self.delete_searched_button.setDisabled(True)
         self.searched_images_count_label = QLabel('검색된 이미지 수: 0')
@@ -259,7 +260,8 @@ class CRImageContainer(QWidget):
         self.layout.addWidget(self.image_label)
 
     def set_image(self, image_path: str):
-        pixmap = QPixmap(image_path)
+        normpath = os.path.normpath(image_path)
+        pixmap = QPixmap(normpath)
         scaled_pixmap = pixmap.scaled(self.image_label.width(), self.image_label.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.image_label.setPixmap(scaled_pixmap)
 
@@ -383,7 +385,9 @@ class CROptionDialog(QDialog):
     def accept(self):
         save_path = self.save_path_data_label.text()
         save_option = self.save_option_data_checkbox.isChecked()
+        stealth_option = self.stealth_option_data_checkbox.isChecked()
         OptionData.update_save_data(save_path, save_option)
+        OptionData.set_stealth_mode(stealth_option)
         super().accept()
 
     def reject(self):
@@ -409,7 +413,7 @@ class CROptionDialog(QDialog):
         main_layout.addLayout(option_layout)
         main_layout.addLayout(button_layout)
 
-        # 옵션 속성1
+        # 옵션 속성1 (저장위치)
         option1_layout = QHBoxLayout()
         self.save_path_option_label = QLabel("저장위치 :")
         self.save_path_data_label = QLabel(f"{OptionData.save_path}")
@@ -420,7 +424,7 @@ class CROptionDialog(QDialog):
         option1_layout.addWidget(self.save_path_option_label)
         option1_layout.addWidget(self.save_path_data_label)
         option1_layout.addWidget(self.save_path_select_button)
-        # 옵션 속성2
+        # 옵션 속성2 (파일 복사 모드)
         option2_layout = QHBoxLayout()
         self.save_option_label = QLabel("파일 복사 모드 :")
         self.save_option_label.setToolTip("해당 옵션이 활성화 되어있을 경우, 검색된 이미지를 복사합니다. 비활성화 되어있을 경우, 이동합니다.")
@@ -430,10 +434,21 @@ class CROptionDialog(QDialog):
         self.save_option_data_checkbox.setFixedHeight(30)
         option2_layout.addWidget(self.save_option_label)
         option2_layout.addWidget(self.save_option_data_checkbox)
+        # 옵션 속성3 (스텔스 모드)
+        option3_layout = QHBoxLayout()
+        self.stealth_option_label = QLabel("숨겨진 태그 찾기 :")
+        self.stealth_option_label.setToolTip("해당 옵션이 활성화 되어있을 경우, 숨겨진 태그를 찾습니다. !주의! 이미지 파일이 매우 많을 경우, 시간이 오래 걸릴 수 있습니다.")
+        self.stealth_option_label.setFixedHeight(30)
+        self.stealth_option_data_checkbox = QCheckBox()
+        self.stealth_option_data_checkbox.setChecked(OptionData.is_stealth_mode)
+        self.stealth_option_data_checkbox.setFixedHeight(30)
+        option3_layout.addWidget(self.stealth_option_label)
+        option3_layout.addWidget(self.stealth_option_data_checkbox)
 
         # 옵션 레이아웃에 추가
         option_layout.addLayout(option1_layout)
         option_layout.addLayout(option2_layout)
+        option_layout.addLayout(option3_layout)
 
         # OK와 Cancel 버튼
         self.ok_button = QPushButton("OK", self)

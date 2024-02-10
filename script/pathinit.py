@@ -15,7 +15,6 @@ def get_resource_path(relative_path: str):
     else:
         # 일반적인 파이썬 스크립트 실행의 경우
         base_path = os.path.abspath(".")
-    print(f"Util : 리소스 경로: {os.path.join(base_path, relative_path)}")
     return os.path.join(base_path, relative_path)
 
 def get_basic_save_path(program_start_path: str) -> str:
@@ -23,7 +22,6 @@ def get_basic_save_path(program_start_path: str) -> str:
     기본 저장 경로를 반환하는 함수
     """
     return os.path.join(program_start_path, "CreeperResult")
-
 
 def get_program_start_path() -> str:
     """
